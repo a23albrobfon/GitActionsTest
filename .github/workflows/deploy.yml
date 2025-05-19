@@ -1,4 +1,4 @@
-name: Desplegament a producció Windows
+name: Desplegament a producció
 
 on:
   push:
@@ -6,22 +6,22 @@ on:
 
 jobs:
   deploy:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest  # Canvia a Linux
     
     steps:
     - name: Checkout del codi
       uses: actions/checkout@v3
       
-    - name: Desplegament via SSH (Windows)
-    uses: appleboy/ssh-action@v0.1.10
-    with:
-      host: ${{ secrets.SSH_HOST }}
-      username: ${{ secrets.SSH_USERNAME }}
-      key: ${{ secrets.SSH_PRIVATE_KEY }}
-      script: |
-        # Comandes PowerShell via SSH
-        powershell -Command "
-          cd C:\inetpub\wwwroot\a23albrobfon;
-          Remove-Item * -Recurse -Force;
-          Copy-Item -Path C:\temp\gh_actions\* -Destination . -Recurse;
-        "
+    - name: Desplegament via SSH
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SSH_HOST }}  # Ex: daw.inspedralbes.cat
+        username: ${{ secrets.SSH_USERNAME }}  # Ex: a23albrobfon
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT || 22 }}
+        script: |
+          cd ~/web/a23albrobfon.githubactions/public_html
+          rm -rf *
+          cp -r /tmp/gh_actions_temp/* .
+          chmod -R 755 .
+          chown -R a23albrobfon:a23albrobfon .
