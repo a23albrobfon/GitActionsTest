@@ -1,0 +1,37 @@
+name: Desplegament a producció
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout del codi
+      uses: actions/checkout@v3
+      
+    - name: Desplegament via SSH
+      uses: appleboy/ssh-action@v0.1.10
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SSH_PORT }}
+        script: |
+          # 1. Anar al directori de producció
+          cd /home/a23albrobfon/web/a23albrobfon.githubactions/public_html
+          
+          # 2. Eliminar contingut anterior (opcional)
+          rm -rf *
+          
+          # 3. Copiar nous arxius des del directori temporal
+          cp -r /tmp/gh_actions_temp/* .
+          
+          # 4. Instal·lar dependències si cal
+          npm install --production
+          
+          # 5. Configurar permisos
+          chmod -R 755 .
+          chown -R a23albrobfon:a23albrobfon .
