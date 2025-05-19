@@ -1,4 +1,4 @@
-name: Desplegament a producció
+name: Desplegament a producció Windows
 
 on:
   push:
@@ -12,26 +12,25 @@ jobs:
     - name: Checkout del codi
       uses: actions/checkout@v3
       
-    - name: Desplegament via SSH
-      uses: appleboy/ssh-action@v0.1.10
+    - name: Desplegament via WinRM (PowerShell)
+      uses: appleboy/winrm-action@v0.4.0
       with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USERNAME }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
+        host: ${{ secrets.WINRM_HOST }}  # Adreça IP o domini
+        username: ${{ secrets.WINRM_USERNAME }}
+        password: ${{ secrets.WINRM_PASSWORD }}  # O usa key si tens certificats
+        port: ${{ secrets.WINRM_PORT || 5986 }}  # 5986 per HTTPS
         script: |
-          # 1. Anar al directori de producció
-          cd /home/a23albrobfon/web/a23albrobfon.githubactions/public_html
+          # 1. Anar al directori de producció (ruta Windows)
+          cd C:\inetpub\wwwroot\a23albrobfon
           
-          # 2. Eliminar contingut anterior (opcional)
-          rm -rf *
+          # 2. Eliminar contingut anterior (PowerShell)
+          Remove-Item * -Recurse -Force
           
-          # 3. Copiar nous arxius des del directori temporal
-          cp -r /tmp/gh_actions_temp/* .
+          # 3. Copiar nous arxius (des de la màquina local)
+          Copy-Item -Path "$env:GITHUB_WORKSPACE\*" -Destination . -Recurse -Force
           
-          # 4. Instal·lar dependències si cal
+          # 4. Instal·lar dependències (si és Node.js)
           npm install --production
           
-          # 5. Configurar permisos
-          chmod -R 755 .
-          chown -R a23albrobfon:a23albrobfon .
+          # 5. Configurar permisos (opcional)
+          icacls . /grant "IIS_IUSRS:(OI)(CI)F"
